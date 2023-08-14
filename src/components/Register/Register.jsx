@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, sendEmailVerification, updateProfile } from "firebase/auth";
 import app from '../../firebase/firebase.init';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
     // const [email, setEmail] = useState('');
@@ -26,6 +27,7 @@ const Register = () => {
 
         const email = event.target.email.value;
         const password = event.target.password.value;
+        const name = event.target.name.value;
 
         if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)) {
             setError('Please Use Minimum eight characters, at least one letter and one number')
@@ -36,9 +38,12 @@ const Register = () => {
             .then((result) => {
                 // Signed in 
                 const loggedUser = result.user;
+                console.log(loggedUser);
                 setError('');
                 event.target.reset();
                 setSuccess('User has been created successfully')
+                emailVarification(result.user);
+                updateUserData(result.user, name)
             })
             .catch((error) => {
                 setError(error.message)
@@ -46,7 +51,25 @@ const Register = () => {
             });
     };
 
+    const emailVarification = (user) => {
+        sendEmailVerification(user)
+            .then((result) => {
+                console.log(result)
+                alert('Pleaser verified email address')
+            })
+    }
 
+    const updateUserData = (user, name) => {
+        updateProfile(user, {
+            displayName: name
+        })
+            .then(() => {
+                console.log('Updated')
+            })
+            .catch(error => {
+                setError(error.message)
+            })
+    }
 
     return (
 
@@ -56,13 +79,27 @@ const Register = () => {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            Your Name
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            className="mt-1 p-2 w-full rounded-md border border-gray-300 focus:ring focus:ring-indigo-300"
+                            placeholder="John Doe"
+                            // value={email}
+                            // onChange={handleEmailChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                             Email
                         </label>
                         <input
                             type="email"
                             id="email"
                             className="mt-1 p-2 w-full rounded-md border border-gray-300 focus:ring focus:ring-indigo-300"
-                            placeholder="you@example.com"
+                            placeholder="johndoe@example.com"
                             // value={email}
                             // onChange={handleEmailChange}
                             required
@@ -93,6 +130,7 @@ const Register = () => {
                 </form>
                 <p className='text-red-600 mt-4'>{error}</p>
                 <p className='text-green-600 mt-4'>{success}</p>
+                <p>Already have an account? Please <Link to='/login'>Login</Link></p>
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { GithubAuthProvider, getAuth, signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
+import React, { useRef, useState } from 'react';
+import { GithubAuthProvider, getAuth, signInWithPopup, signOut, GoogleAuthProvider, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import app from '../../firebase/firebase.init';
+import { Link } from 'react-router-dom';
 
 
 const Login = () => {
@@ -48,7 +49,7 @@ const Login = () => {
 
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-
+    const emailRef = useRef();
 
     const handleLogin = event => {
         event.preventDefault();
@@ -63,6 +64,37 @@ const Login = () => {
             setError('Please Use Minimum eight characters, at least one letter and one number')
             return;
         }
+
+        signInWithEmailAndPassword(auth, email, password)
+            .then(result => {
+                const loggedUser = result.user;
+                console.log(loggedUser);
+                if (!loggedUser.emailVerified) {
+
+                }
+                setSuccess('user login successful');
+                setError('');
+            })
+            .catch(error => {
+                setError(error.message);
+            })
+    }
+
+    const resetPass = event => {
+        const email = emailRef.current.value;
+        if (!email) {
+            alert('Please provide an email address');
+            return;
+        }
+
+        sendPasswordResetEmail(auth, email)
+            .then(result => {
+                alert('Please check your email');
+            })
+            .catch(error => {
+                console.log(error);
+                setError(error.message);
+            })
     }
 
     return (
@@ -73,14 +105,9 @@ const Login = () => {
                     <button onClick={handleGoogleSignIn}>Google</button>
                     <button onClick={handleGithubSignIn} >GitHub</button>
                 </div>
-            }
+            } */}
 
-            {user && <div>
-                <h3>Hello {user.displayName}</h3>
-                <p>Email: {user.email}</p>
-                <img src={user.photoURL} alt="" />
-                <button onClick={handleGoogleSignOut}>SignOut</button>
-            </div>} */}
+
 
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
                 <div className="bg-white p-8 rounded shadow-md w-full sm:w-96">
@@ -94,6 +121,7 @@ const Login = () => {
                                 type="email"
                                 id="email"
                                 name='email'
+                                ref={emailRef}
                                 className="mt-1 p-2 w-full rounded-md border border-gray-300 focus:ring focus:ring-indigo-300"
                                 placeholder="you@example.com"
                                 // value={email}
@@ -124,16 +152,27 @@ const Login = () => {
                             >
                                 Log In
                             </button>
-                            {
-                                !user &&
-                                <div className='flex justify-evenly '>
-                                    <button className='border bg-green-300 rounded-md mt-5' onClick={handleGoogleSignIn}>Google</button>
-                                    <button className='border bg-green-300 rounded-md mt-5' onClick={handleGithubSignIn} >GitHub</button>
-                                </div>
-                            }
+
                         </div>
                     </form>
                     <p className='text-red-600 mt-4'>{error}</p>
+
+                    <p className='text-green-600 mt-4'>{success}</p>
+                    <p>Forgot Password? <button onClick={resetPass} className='text-blue-500'>Reset Password</button></p>
+                    <p>New to this Website? Please <Link to='/register' className='text-blue-500'>Register</Link></p>
+                    {
+                        !user &&
+                        <div className='flex justify-evenly '>
+                            <button className='border bg-green-300 rounded-md mt-5' onClick={handleGoogleSignIn}>Google</button>
+                            <button className='border bg-green-300 rounded-md mt-5' onClick={handleGithubSignIn} >GitHub</button>
+                        </div>
+                    }
+                    {user && <div>
+                        <h3>Hello {user.displayName}</h3>
+                        <p>Email: {user.email}</p>
+                        <img src={user.photoURL} alt="" />
+                        <button onClick={handleGoogleSignOut}>SignOut</button>
+                    </div>}
                 </div>
             </div>
         </div>
